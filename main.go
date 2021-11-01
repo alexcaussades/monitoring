@@ -3,9 +3,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"test/webhookperso"
 	"time"
-
-	"./webhookperso"
 	"github.com/ecnepsnai/discord"
 )
 
@@ -40,7 +39,7 @@ func Caseurl(value string) {
 	if resp != "No access the adresse web" {
 		switch resp {
 		case "200 OK":
-			
+
 		case "404":
 			fmt.Println(discord.Say(now.Format("15:04:05") + " " + resp + " => erreur: 404"))
 		case "500":
@@ -53,7 +52,7 @@ func Caseurl(value string) {
 			fmt.Println("default", resp)
 		}
 	} else {
-		fmt.Println(discord.Say((now.Format("15:04:05") + " " + error.Error() )))
+		fmt.Println(discord.Say((now.Format("15:04:05") + " " + error.Error())))
 	}
 
 }
