@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"test/urlliste"
 	"test/webhookperso"
 	"time"
+
 	"github.com/ecnepsnai/discord"
 )
 
@@ -15,16 +17,6 @@ func urlinport(url string) (string, error) {
 	}
 	defer resp.Body.Close()
 	return resp.Status, nil
-}
-
-func getmap() map[int]string {
-
-	m := make(map[int]string)
-	m[0] = "https://www.alexcaussades.com"
-	m[1] = "https://ouioweb.com/"
-	m[2] = "https://myalternos.fr/"
-	return m
-
 }
 
 func Caseurl(value string) {
@@ -39,33 +31,30 @@ func Caseurl(value string) {
 	if resp != "No access the adresse web" {
 		switch resp {
 		case "200 OK":
-
+			fmt.Println("OK" + " " + value)
 		case "404":
-			fmt.Println(discord.Say(now.Format("15:04:05") + " " + resp + " => erreur: 404"))
+			fmt.Println(discord.Say(now.Format("15:04:05") + " " + value + " => erreur: 404"))
 		case "500":
-			fmt.Println(discord.Say((now.Format("15:04:05") + " " + resp + " => erreur: 500")))
+			fmt.Println(discord.Say((now.Format("15:04:05") + " " + value + " => erreur: 500")))
 		case "503":
-			fmt.Println(discord.Say((now.Format("15:04:05") + " " + resp + " => erreur: 500")))
+			fmt.Println(discord.Say((now.Format("15:04:05") + " " + value + " => erreur: 500")))
 		case "504":
-			fmt.Println(discord.Say((now.Format("15:04:05") + " " + resp + " => erreur: 504")))
+			fmt.Println(discord.Say((now.Format("15:04:05") + " " + value + " => erreur: 504")))
 		default:
-			fmt.Println("default", resp)
+			fmt.Println(discord.Say((now.Format("15:04:05") + "default: " + value + error.Error())))
 		}
 	} else {
-		fmt.Println(discord.Say((now.Format("15:04:05") + " " + error.Error())))
+		fmt.Println(discord.Say((now.Format("15:04:05") + " " + value + " => erreur: NO DNS")))
 	}
 
 }
 
 func main() {
-	m := getmap()
-	c := time.Tick(60 * time.Second)
-	for now := range c {
-		for _, i := range m {
-			fmt.Println(now.Format("15:04:05"))
-			Caseurl(i)
+	m := urlliste.Setmap()
+	for {
+		for i := 0; i < len(m); i++ {
+			Caseurl(m[i])
+			time.Sleep(6 * time.Second)
 		}
-
 	}
-
 }
