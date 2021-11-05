@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"test/urlliste"
 	"test/webhookperso"
 	"time"
@@ -10,22 +9,13 @@ import (
 	"github.com/ecnepsnai/discord"
 )
 
-func urlinport(url string) (string, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return "No access the adresse web", err
-	}
-	defer resp.Body.Close()
-	return resp.Status, nil
-}
-
 func Caseurl(value string) {
 
 	/**
 	* changement de formule sur la function
 	 */
 
-	resp, error := urlinport(value)
+	resp, error := urlliste.Urlinport(value)
 	discord.WebhookURL = webhookperso.TokenPerso()
 	now := time.Now()
 	if resp != "No access the adresse web" {
