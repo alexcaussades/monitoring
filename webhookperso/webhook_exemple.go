@@ -8,7 +8,7 @@ package webhookperso
 * @author Alexandre Caussades
  */
 
-type Webhook struct {
+type Webhook_ struct {
 	Token string
 }
 

@@ -1,23 +1,76 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
+	"os"
 	"test/urlliste"
 	"test/webhookperso"
 	"time"
 
 	"github.com/ecnepsnai/discord"
+	_ "github.com/mattn/go-sqlite3"
 )
 
+type Url struct {
+	Id   int
+	Code string
+	Url  string
+}
+
 func Caseurl(value string) {
-
-	/**
-	* changement de formule sur la function
-	 */
-
+	db, err := sql.Open("sqlite3", "test1.db")
+	if err != nil {
+		fmt.Printf("Cannot open database. err=%v\n", err)
+		os.Exit(1)
+	}
+	defer db.Close()
+	var chemain = `
+	CREATE TABLE IF NOT EXISTS statusurls
+	(
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		code TEXT,
+		url TEXT
+	)
+	`
+	stmt, err := db.Prepare(chemain)
+	if err != nil {
+		fmt.Printf("Cannot prepare statement. err=%v\n", err)
+		os.Exit(1)
+	}
+	stmt.Exec()
 	resp, error := urlliste.Urlinport(value)
 	discord.WebhookURL = webhookperso.TokenPerso()
 	now := time.Now()
+	req, err := db.Query("SELECT * FROM statusurls WHERE url = ?", value)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(req , value)
+	if req != nil {
+		for req.Next() {
+			var id int
+			var code string
+			var url string
+			err = req.Scan(&id, &code, &url)
+			if err != nil {
+				log.Fatal(err)
+			}
+			u := Url{}
+			if u.Url == value {
+				log.Println(u.Code, u.Url, u.Id, resp)
+				if u.Code != resp {
+					db.Query("UPDATE statusurls SET code = ? WHERE id = ? AND url = ?", resp, u.Id, u.Url)
+					log.Println("update is good")
+				}
+			}
+		}
+	} else if (req == nil) {
+		req, _ := db.Prepare("INSERT INTO statusurls(code, url) VALUES(?, ?)")
+		req.Exec("200", value)
+		log.Println("insert is good")
+	}
 	if resp != "No access the adresse web" {
 		switch resp {
 		case "200 OK":
