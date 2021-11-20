@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"test/urlliste"
 	"test/webhookperso"
 	"time"
@@ -12,12 +13,6 @@ import (
 	"github.com/ecnepsnai/discord"
 	_ "github.com/mattn/go-sqlite3"
 )
-
-type Url struct {
-	Id   int
-	Code string
-	Url  string
-}
 
 func Caseurl(value string) {
 	db, err := sql.Open("sqlite3", "test1.db")
@@ -47,30 +42,29 @@ func Caseurl(value string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(req , value)
-	if req != nil {
-		for req.Next() {
-			var id int
-			var code string
-			var url string
-			err = req.Scan(&id, &code, &url)
-			if err != nil {
-				log.Fatal(err)
-			}
-			u := Url{}
-			if u.Url == value {
-				log.Println(u.Code, u.Url, u.Id, resp)
-				if u.Code != resp {
-					db.Query("UPDATE statusurls SET code = ? WHERE id = ? AND url = ?", resp, u.Id, u.Url)
-					log.Println("update is good")
-				}
-			}
+	//log.Println(req , value)
+
+	if req.Next() {
+		var id int
+		var code string
+		var url string
+		err := req.Scan(&id, &code, &url)
+		if err != nil {
+			log.Fatal(err)
 		}
-	} else if (req == nil) {
+		responsecode := strings.Split(resp, " ")
+		if url == value {
+			log.Println(code, url, id, resp)
+			if code != responsecode[0] {
+				db.Query("UPDATE statusurls SET code = ? WHERE id = ? AND url = ?", resp, id, url)
+			} 
+		}
+	} else {
 		req, _ := db.Prepare("INSERT INTO statusurls(code, url) VALUES(?, ?)")
 		req.Exec("200", value)
 		log.Println("insert is good")
 	}
+
 	if resp != "No access the adresse web" {
 		switch resp {
 		case "200 OK":
