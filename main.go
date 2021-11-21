@@ -22,8 +22,10 @@ type JsonInfo struct {
 	Time int64  `json:"-"`
 }
 
+var BddSqlite string = "test1.db"
+
 func Caseurl(value string) {
-	db, err := sql.Open("sqlite3", "test1.db")
+	db, err := sql.Open("sqlite3", BddSqlite)
 	if err != nil {
 		fmt.Printf("Cannot open database. err=%v\n", err)
 		os.Exit(1)
@@ -140,7 +142,7 @@ func Caseurl(value string) {
 }
 
 func jsonInformation(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("sqlite3", "test1.db")
+	db, err := sql.Open("sqlite3", BddSqlite)
 
 	if err != nil {
 		fmt.Printf("Cannot open database. err=%v\n", err)
@@ -157,54 +159,46 @@ func jsonInformation(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 		}
 
-		for i := 0; i < id; i++ {
-			res, _ := db.Query("SELECT * FROM statusurls WHERE id = ?", i)
+		//m := urlliste.Setmap()
+		
+			res, _ := db.Query("SELECT * FROM statusurls WHERE id = ?", 1)
 			if res.Next() {
 				var id int
 				var code string
 				var url string
-				var time int
+				var time int64
 				err := res.Scan(&id, &code, &url, &time)
 				if err != nil {
 					log.Fatal(err)
 				}
-
-				for i := 0; i <= id; i++ {
-					res, _ := db.Query("SELECT * FROM statusurls WHERE id = ?", i)
-					if res.Next() {
-						var id int
-						var code string
-						var url string
-						var time int64
-						err := res.Scan(&id, &code, &url, &time)
-						if err != nil {
-							log.Fatal(err)
-						}
-						indos := []JsonInfo{
-							{
-								Code: code,
-								Url:  url,
-								Time: time,
-							},
-						}
-						retunrjs, _ := json.MarshalIndent(indos, "", " ")
-						w.Header().Set("Content-Type", "application/json")
-						w.Write(retunrjs)
-					}
+				jsonencode := []JsonInfo{
+					{
+						Code: code,
+						Url:  url,
+						Time: time,
+					},
 				}
+				retunrjs, err := json.MarshalIndent(jsonencode, "", " ")
+				if err != nil {
+					log.Fatal(err)
+				}
+				w.Header().Set("Content-Type", "application/json")
+				w.Write(retunrjs)
 			}
+		
 
-		}
 	}
 }
 
 func main() {
-	m := urlliste.Setmap()
-	for {
-		for i := 0; i < len(m); i++ {
-			Caseurl(m[i])
-			time.Sleep(6 * time.Second)
-		}
-	}
+	//m := urlliste.Setmap()
+	http.HandleFunc("/", jsonInformation)
+	http.ListenAndServe(":80", nil)
+	// for {
+	// 	for i := 0; i < len(m); i++ {
+	// 		Caseurl(m[i])
+	// 		time.Sleep(6 * time.Second)
+	// 	}
+	// }
 
 }
