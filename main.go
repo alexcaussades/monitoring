@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,7 +19,7 @@ import (
 type JsonInfo struct {
 	Url  string `json:"url"`
 	Code string `json:"code"`
-	Time int64  `json:"time"`
+	Time int64  `json:"-"`
 }
 
 func Caseurl(value string) {
@@ -149,14 +150,13 @@ func jsonInformation(w http.ResponseWriter, r *http.Request) {
 
 	res, _ := db.Query("SELECT count(id) FROM statusurls")
 
-	
 	if res.Next() {
 		var id int
 		err := res.Scan(&id)
 		if err != nil {
 			log.Fatal(err)
 		}
-		
+
 		for i := 0; i < id; i++ {
 			res, _ := db.Query("SELECT * FROM statusurls WHERE id = ?", i)
 			if res.Next() {
@@ -168,28 +168,37 @@ func jsonInformation(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					log.Fatal(err)
 				}
-				fmt.Println(id, code, url, time)
+
+				for i := 0; i <= id; i++ {
+					res, _ := db.Query("SELECT * FROM statusurls WHERE id = ?", i)
+					if res.Next() {
+						var id int
+						var code string
+						var url string
+						var time int64
+						err := res.Scan(&id, &code, &url, &time)
+						if err != nil {
+							log.Fatal(err)
+						}
+						indos := []JsonInfo{
+							{
+								Code: code,
+								Url:  url,
+								Time: time,
+							},
+						}
+						retunrjs, _ := json.MarshalIndent(indos, "", " ")
+						w.Header().Set("Content-Type", "application/json")
+						w.Write(retunrjs)
+					}
+				}
 			}
+
 		}
-
 	}
-	// jsonInf := []JsonInfo{
-	// 	{
-	// 		Code: "200",
-	// 		Url: "https://www.google.com",
-	// 		Time: "15:04:05",
-	// 	},
-	// }
-
 }
 
-
-
 func main() {
-
-	http.HandleFunc("/monitoring-serveur", jsonInformation)
-	http.ListenAndServe(":8080", nil)
-
 	m := urlliste.Setmap()
 	for {
 		for i := 0; i < len(m); i++ {
@@ -197,4 +206,5 @@ func main() {
 			time.Sleep(6 * time.Second)
 		}
 	}
+
 }
