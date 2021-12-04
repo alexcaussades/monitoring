@@ -17,6 +17,7 @@ import (
 )
 
 type JsonInfo struct {
+	Id   int    `json:"id"`
 	Url  string `json:"url"`
 	Code string `json:"code"`
 	Time int64  `json:"-"`
@@ -84,7 +85,7 @@ func Caseurl(value string) {
 		}
 		responsecode := strings.Split(resp, " ")
 		if url == value {
-			log.Println(code, url, id, resp)
+			//log.Println(code, url, id, resp)
 			if code != responsecode[0] {
 				db.Query("UPDATE statusurls SET code = ? WHERE id = ? AND url = ?", resp, id, url)
 				db.Query("UPDATE statusurls SET time = ? WHERE id = ? AND url = ?", now.Unix(), id, url)
@@ -150,44 +151,35 @@ func jsonInformation(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	res, _ := db.Query("SELECT count(id) FROM statusurls")
-
+	res, _ := db.Query("SELECT * FROM statusurls ORDER BY id")
 	if res.Next() {
 		var id int
-		err := res.Scan(&id)
+		var code string
+		var url string
+		var time int64
+		err := res.Scan(&id, &code, &url, &time)
+		log.Println(id, code, url, time)
+
 		if err != nil {
 			log.Fatal(err)
 		}
+		// jsonencode := []JsonInfo{
+		// 	{
 
-		//m := urlliste.Setmap()
-		
-			res, _ := db.Query("SELECT * FROM statusurls WHERE id = ?", 1)
-			if res.Next() {
-				var id int
-				var code string
-				var url string
-				var time int64
-				err := res.Scan(&id, &code, &url, &time)
-				if err != nil {
-					log.Fatal(err)
-				}
-				jsonencode := []JsonInfo{
-					{
-						Code: code,
-						Url:  url,
-						Time: time,
-					},
-				}
-				retunrjs, err := json.MarshalIndent(jsonencode, "", " ")
-				if err != nil {
-					log.Fatal(err)
-				}
-				w.Header().Set("Content-Type", "application/json")
-				w.Write(retunrjs)
-			}
-		
+		// 		Code: code,
+		// 		Url:  url,
+		// 		Time: time,
+		// 	},
+		// }
 
+		retunrjs, err := json.Marshal(	JsonInfo{Code: code,	Url:  url,	Time: time,	})
+		if err != nil {
+			log.Fatal(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(retunrjs)
 	}
+
 }
 
 func main() {
